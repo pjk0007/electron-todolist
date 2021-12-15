@@ -1,6 +1,6 @@
 const electron = require("electron");
 
-const { app, BrowserWindow, Menu } = electron;
+const { app, BrowserWindow, Menu, ipcMain } = electron;
 
 const OSKEY = {
   ctrl: process.platform === "win32" ? "Ctrl" : "Command",
@@ -19,6 +19,7 @@ app.on("ready", () => {
     },
   });
   mainWindow.loadURL(`file://${__dirname}/main.html`);
+  mainWindow.on("closed", () => app.quit());
 
   const mainMenu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(mainMenu);
@@ -26,12 +27,23 @@ app.on("ready", () => {
 
 function createAddWindow() {
   addWindow = new BrowserWindow({
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+    },
     width: 300,
     height: 200,
     title: "Add New TOdo",
   });
   addWindow.loadURL(`file://${__dirname}/add.html`);
+  addWindow.on("closed", () => (addWindow = null));
 }
+
+ipcMain.on("todo:add", (event, todo) => {
+  mainWindow.webContents.send("todo:add", todo);
+  addWindow.close();
+});
 
 const menuTemplate = [
   {
@@ -57,3 +69,22 @@ const menuTemplate = [
 if (process.platform === "darwin") {
   menuTemplate.unshift({});
 }
+
+if (process.env.NODE_ENV !== "production") {
+  menuTemplate.push({
+    label: "DEVELOPER!!!",
+    submenu: [
+      {
+        label: "Toggle Developer Tools",
+        accelerator: `${OSKEY.ctrl}+${OSKEY.alt}+I`,
+        click(item, focuseWindow) {
+          focuseWindow.toggleDevTools();
+        },
+      },
+    ],
+  });
+}
+// 'production'
+// 'development'
+// 'staging'
+// 'test'

@@ -56,6 +56,12 @@ const menuTemplate = [
         },
       },
       {
+        label: "Clear Todos",
+        click() {
+          mainWindow.webContents.send("todo:clear");
+        },
+      },
+      {
         label: "Quit",
         accelerator: `${OSKEY.ctrl}+Q`,
         click() {
@@ -74,6 +80,9 @@ if (process.env.NODE_ENV !== "production") {
   menuTemplate.push({
     label: "DEVELOPER!!!",
     submenu: [
+      {
+        role: "reload",
+      },
       {
         label: "Toggle Developer Tools",
         accelerator: `${OSKEY.ctrl}+${OSKEY.alt}+I`,
